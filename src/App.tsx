@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useNova } from './nova/useNova';
 import { Header } from './nova/ui/Header';
 import { AgentList } from './nova/ui/AgentList';
