@@ -6,6 +6,14 @@ import { ChatPanel } from './nova/ui/ChatPanel';
 import { ExecutionPanel } from './nova/ui/ExecutionPanel';
 import { ResultPanel } from './nova/ui/ResultPanel';
 import { Landing } from './Landing';
+import { AuthPayment, Profile, User } from './AuthPayment';
+
+const [user, setUser] = useState<User | null>(() => {
+  const saved = localStorage.getItem('nova_current_user');
+  return saved ? JSON.parse(saved) : null;
+});
+const [showProfile, setShowProfile] = useState(false);
+const [showPricing, setShowPricing] = useState(false);
 
 function App() {
   const { state, submitTask, stop, retry, reset, allAgents } = useNova();
@@ -39,6 +47,10 @@ function App() {
     a.click();
     URL.revokeObjectURL(url);
   }, [state.finalOutput]);
+
+  if (!user) {
+  return <AuthPayment onLogin={setUser} />;
+}
 
   if (!showApp) {
     return <Landing onGetStarted={() => setShowApp(true)} />;
