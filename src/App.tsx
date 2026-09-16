@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNova } from './nova/useNova';
 import { Header } from './nova/ui/Header';
 import { AgentList } from './nova/ui/AgentList';
@@ -6,14 +6,6 @@ import { ChatPanel } from './nova/ui/ChatPanel';
 import { ExecutionPanel } from './nova/ui/ExecutionPanel';
 import { ResultPanel } from './nova/ui/ResultPanel';
 import { Landing } from './Landing';
-import { AuthPayment, Profile, User } from './AuthPayment';
-
-const [user, setUser] = useState<User | null>(() => {
-  const saved = localStorage.getItem('nova_current_user');
-  return saved ? JSON.parse(saved) : null;
-});
-const [showProfile, setShowProfile] = useState(false);
-const [showPricing, setShowPricing] = useState(false);
 
 function App() {
   const { state, submitTask, stop, retry, reset, allAgents } = useNova();
@@ -48,10 +40,6 @@ function App() {
     URL.revokeObjectURL(url);
   }, [state.finalOutput]);
 
-  if (!user) {
-  return <AuthPayment onLogin={setUser} />;
-}
-
   if (!showApp) {
     return <Landing onGetStarted={() => setShowApp(true)} />;
   }
@@ -62,8 +50,7 @@ function App() {
         <Header />
         <button
           onClick={() => setShowApp(false)}
-          style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 7, padding: '5px 10px', color: 'rgba(255,255,255,0.6)', fontSize: 12, cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}
-        >
+          style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 7, padding: '5px 10px', color: 'rgba(255,255,255,0.6)', fontSize: 12, cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}>
           ← Home
         </button>
       </div>
@@ -101,20 +88,6 @@ function App() {
         <aside className="w-72 lg:w-80 shrink-0 glass-panel-strong hidden lg:flex flex-col">
           <ExecutionPanel state={state} />
         </aside>
-      </div>
-
-      <div className="md:hidden glass-panel-strong border-t border-indigo-500/10 px-4 py-2 flex items-center gap-3 overflow-x-auto">
-        <div className="flex items-center gap-1.5 shrink-0">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          <span className="text-xs text-green-400 font-medium">Master Online</span>
-        </div>
-        <div className="w-px h-4 bg-slate-700 shrink-0" />
-        <span className="text-xs text-slate-400 shrink-0">
-          {Object.values(state.agentStates).filter((a) => a.status === 'running').length} running
-        </span>
-        <span className="text-xs text-slate-400 shrink-0">
-          {Object.values(state.agentStates).filter((a) => a.status === 'completed').length} completed
-        </span>
       </div>
     </div>
   );
