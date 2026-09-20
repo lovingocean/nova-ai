@@ -1,5 +1,6 @@
+'use client';
 import { useState, useRef, useEffect } from 'react';
-import { Send, Square, RotateCcw, Copy, Download, Paperclip, Sparkles, Check } from 'lucide-react';
+import { Send, Square, RefreshCw, Copy, Download, Sparkles } from 'lucide-react';
 import type { NovaState } from '../types';
 
 interface ChatPanelProps {
@@ -12,190 +13,171 @@ interface ChatPanelProps {
 }
 
 const EXAMPLES = [
-  'Create a marketing strategy for an FMCG company in Pakistan.',
-  'Analyze why sales dropped last quarter.',
-  'Write a cold email sequence for Pakistani SME owners.',
-  'Build a 30-day LinkedIn content calendar.',
-  'Create an investor pitch for an AI startup.',
-  'Build a landing page for a SaaS product.',
-  'Write the code for a user authentication feature.',
-  'Create a complete go-to-market strategy for my SaaS.',
+  'Create a go-to-market strategy for my SaaS startup',
+  'Write a 5-email cold outreach sequence for enterprise clients',
+  'Analyze why my revenue dropped 20% last quarter',
+  'Build a 30-day LinkedIn content calendar',
+  'Create an investor pitch for my Series A',
+  'Design a workflow automation for lead follow-up',
+  'Write production-ready TypeScript code for my API',
+  'Create a complete SEO strategy for my website',
 ];
 
 export function ChatPanel({ state, onSubmit, onStop, onRetry, onCopy, onExport }: ChatPanelProps) {
   const [input, setInput] = useState('');
-  const [showExamples, setShowExamples] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const isRunning = state.isRunning;
-  const hasOutput = state.finalOutput !== null;
+  const messagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
-    }
-  }, [input]);
+    if (messagesRef.current) messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+  }, [state.log, state.finalOutput]);
 
   const handleSubmit = () => {
-    if (!input.trim() || isRunning) return;
-    setShowExamples(false);
+    if (!input.trim() || state.isRunning) return;
     onSubmit(input.trim());
+    setInput('');
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      handleSubmit();
-    }
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit(); }
   };
 
-  const handleExample = (example: string) => {
-    setInput(example);
-    setShowExamples(false);
-    textareaRef.current?.focus();
-  };
+  const isIdle = state.phase === 'idle';
+  const isRunning = state.isRunning;
+  const isDone = state.phase === 'complete' || state.phase === 'error';
 
   return (
-    <div className="flex flex-col h-full">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f5f4f0' }}>
+
+      {/* Messages area */}
+      <div ref={messagesRef} style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+        {/* Welcome state */}
+        {isIdle && !state.finalOutput && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
+            <div style={{ width: 56, height: 56, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 8px 24px rgba(99,102,241,0.3)' }}>
+              <Sparkles size={26} color="#fff" />
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#1a1a2e', marginBottom: 6, textAlign: 'center' }}>What do you want Nova to do?</h2>
+            <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 28, textAlign: 'center' }}>17 specialized agents work together to complete any business task</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', maxWidth: 600 }}>
+              {EXAMPLES.map((ex, i) => (
+                <button key={i} onClick={() => setInput(ex)}
+                  style={{ background: '#fff', border: '1px solid #e8e4dd', borderRadius: 20, padding: '7px 14px', fontSize: 12, color: '#374151', cursor: 'pointer', fontFamily: 'Inter,sans-serif', transition: 'all .15s' }}
+                  onMouseOver={e => { (e.target as HTMLElement).style.borderColor = '#6366f1'; (e.target as HTMLElement).style.color = '#6366f1'; (e.target as HTMLElement).style.background = '#ede9fe'; }}
+                  onMouseOut={e => { (e.target as HTMLElement).style.borderColor = '#e8e4dd'; (e.target as HTMLElement).style.color = '#374151'; (e.target as HTMLElement).style.background = '#fff'; }}>
+                  {ex}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Running state */}
+        {isRunning && (
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Sparkles size={15} color="#fff" />
+            </div>
+            <div style={{ background: '#fff', border: '1px solid #e8e4dd', borderRadius: '4px 16px 16px 16px', padding: '14px 16px', maxWidth: '75%', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <div style={{ display: 'flex', gap: 3 }}>
+                  {[0,1,2].map(i => (
+                    <div key={i} style={{ width: 7, height: 7, borderRadius: '50%', background: '#6366f1', animation: `bounce .9s ease-in-out ${i * .15}s infinite` }} />
+                  ))}
+                </div>
+                <span style={{ fontSize: 12, color: '#6366f1', fontWeight: 600 }}>Nova is working...</span>
+              </div>
+              {state.log.length > 0 && (
+                <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.5 }}>
+                  {typeof state.log[state.log.length - 1] === 'string'
+                    ? String(state.log[state.log.length - 1])
+                    : 'Processing...'}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Final output */}
+        {state.finalOutput && (
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Sparkles size={15} color="#fff" />
+            </div>
+            <div style={{ flex: 1, background: '#fff', border: '1px solid #e8e4dd', borderRadius: '4px 16px 16px 16px', padding: '16px 18px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingBottom: 10, borderBottom: '1px solid #f0ece4' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#065f46' }}>Nova completed your task</span>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button onClick={onCopy} style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 7, padding: '5px 10px', fontSize: 11, cursor: 'pointer', fontFamily: 'Inter,sans-serif', display: 'flex', alignItems: 'center', gap: 4, color: '#374151' }}>
+                    <Copy size={11} /> Copy
+                  </button>
+                  <button onClick={onExport} style={{ background: '#ede9fe', border: '1px solid #c4b5fd', borderRadius: 7, padding: '5px 10px', fontSize: 11, cursor: 'pointer', fontFamily: 'Inter,sans-serif', display: 'flex', alignItems: 'center', gap: 4, color: '#6366f1', fontWeight: 600 }}>
+                    <Download size={11} /> Export
+                  </button>
+                </div>
+              </div>
+              <div style={{ fontSize: 13, lineHeight: 1.8, color: '#1a1a2e', whiteSpace: 'pre-wrap', maxHeight: 400, overflowY: 'auto' }}>
+                {state.finalOutput.content}
+              </div>
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid #f0ece4', display: 'flex', gap: 8 }}>
+                <button onClick={onRetry} style={{ background: '#f3f4f6', border: '1px solid #e5e7eb', borderRadius: 8, padding: '7px 14px', fontSize: 12, cursor: 'pointer', fontFamily: 'Inter,sans-serif', color: '#374151', display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <RefreshCw size={12} /> Try again
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error state */}
+        {state.phase === 'error' && !state.finalOutput && (
+          <div style={{ background: '#fff', border: '1px solid #fecaca', borderLeft: '3px solid #ef4444', borderRadius: 10, padding: '14px 16px' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#991b1b', marginBottom: 6 }}>Something went wrong</div>
+            <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 10 }}>Nova encountered an error processing your request.</div>
+            <button onClick={onRetry} style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 7, padding: '6px 12px', fontSize: 12, cursor: 'pointer', fontFamily: 'Inter,sans-serif', color: '#991b1b', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <RefreshCw size={12} /> Retry
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Input area */}
-      <div className="p-4 border-b border-indigo-500/10">
-        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 block">
-          Nova Chat
-        </label>
-        <div className="glass-panel rounded-2xl p-3 focus-within:border-indigo-500/30 transition-colors">
+      <div style={{ background: '#fff', borderTop: '1px solid #e8e4dd', padding: '14px 20px' }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
           <textarea
             ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="What do you want Nova to do?"
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={handleKey}
             disabled={isRunning}
-            className="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm leading-relaxed resize-none outline-none disabled:opacity-50"
-            rows={3}
+            placeholder="Ask Nova anything — business strategy, marketing, code, research..."
+            rows={2}
+            style={{ flex: 1, background: '#f9fafb', border: '1.5px solid #e8e4dd', borderRadius: 12, padding: '11px 14px', fontSize: 14, fontFamily: 'Inter,sans-serif', color: '#1a1a2e', resize: 'none', outline: 'none', transition: 'border-color .2s', lineHeight: 1.5 }}
+            onFocus={e => e.target.style.borderColor = '#6366f1'}
+            onBlur={e => e.target.style.borderColor = '#e8e4dd'}
           />
-          <div className="flex items-center justify-between mt-2">
-            <div className="flex items-center gap-1.5">
-              <button
-                className="p-1.5 rounded-lg hover:bg-indigo-500/10 text-slate-400 hover:text-indigo-400 transition-colors"
-                title="Attach file"
-                disabled={isRunning}
-              >
-                <Paperclip className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              {hasOutput && !isRunning && (
-                <>
-                  <button
-                    onClick={onRetry}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/40 transition-colors"
-                    title="Retry"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    Retry
-                  </button>
-                  <button
-                    onClick={onCopy}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/40 transition-colors"
-                    title="Copy output"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                    Copy
-                  </button>
-                  <button
-                    onClick={onExport}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/40 transition-colors"
-                    title="Export"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Export
-                  </button>
-                </>
-              )}
-              {isRunning ? (
-                <button
-                  onClick={onStop}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"
-                >
-                  <Square className="w-3.5 h-3.5 fill-current" />
-                  Stop
-                </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={!input.trim()}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-400 hover:to-blue-400 disabled:opacity-30 disabled:cursor-not-allowed transition-all nova-glow"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  Submit Task
-                </button>
-              )}
-            </div>
-          </div>
+          {isRunning ? (
+            <button onClick={onStop} style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: 10, padding: '11px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'Inter,sans-serif', color: '#ef4444', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+              <Square size={14} /> Stop
+            </button>
+          ) : (
+            <button onClick={handleSubmit} disabled={!input.trim()}
+              style={{ background: input.trim() ? '#6366f1' : '#e5e7eb', border: 'none', borderRadius: 10, padding: '11px 18px', fontSize: 13, fontWeight: 600, cursor: input.trim() ? 'pointer' : 'not-allowed', fontFamily: 'Inter,sans-serif', color: input.trim() ? '#fff' : '#9ca3af', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, transition: 'all .2s' }}>
+              <Send size={14} /> Send
+            </button>
+          )}
         </div>
-        <p className="text-[10px] text-slate-600 mt-1.5 px-1">
-          Press ⌘/Ctrl + Enter to submit
-        </p>
+        <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 8, textAlign: 'center' }}>
+          Press Enter to send · Shift+Enter for new line · 17 agents ready
+        </div>
       </div>
 
-      {/* Examples / status */}
-      {showExamples && !isRunning && !hasOutput && (
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-indigo-400" />
-            <p className="text-sm font-semibold text-slate-300">Try an example</p>
-          </div>
-          <div className="grid gap-2">
-            {EXAMPLES.map((example) => (
-              <button
-                key={example}
-                onClick={() => handleExample(example)}
-                className="text-left p-3 rounded-xl glass-panel hover:border-indigo-500/30 transition-all group"
-              >
-                <p className="text-sm text-slate-300 group-hover:text-white transition-colors">{example}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Running status */}
-      {isRunning && (
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-blue-500/20 mb-4">
-              <div className="w-8 h-8 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-            </div>
-            <p className="text-sm font-semibold text-white capitalize">
-              {state.phase === 'understanding' && 'Understanding your request...'}
-              {state.phase === 'planning' && 'Creating execution plan...'}
-              {state.phase === 'selecting' && 'Selecting agents...'}
-              {state.phase === 'executing' && 'Executing tasks...'}
-              {state.phase === 'combining' && 'Combining results...'}
-              {state.phase === 'verifying' && 'Verifying output...'}
-            </p>
-            <p className="text-xs text-slate-500 mt-1">Nova is working on your task</p>
-          </div>
-        </div>
-      )}
+      <style>{`
+        @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+      `}</style>
     </div>
-  );
-}
-
-export function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }}
-      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/40 transition-colors"
-    >
-      {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-      {copied ? 'Copied' : 'Copy'}
-    </button>
   );
 }

@@ -1,33 +1,51 @@
-import { Bot, Sparkles } from 'lucide-react';
+import { Sparkles, Bell, Search } from 'lucide-react';
 
 export function Header() {
   return (
-    <header className="flex items-center justify-between px-6 py-4 border-b border-indigo-500/10">
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 via-blue-500 to-indigo-600 flex items-center justify-center nova-glow">
-            <Bot className="w-6 h-6 text-white" />
-          </div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full ring-2 ring-[#05060f] animate-pulse" />
+    <div style={{
+      background: '#ffffff',
+      borderBottom: '1px solid #e8e4dd',
+      padding: '0 20px',
+      height: 56,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+    }}>
+      {/* Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}>
+          <Sparkles size={16} color="#fff" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
-            NOVA <span className="text-gradient">AI</span>
-          </h1>
-          <p className="text-xs text-slate-400 font-medium">Your Universal AI Employee</p>
+          <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1a2e', letterSpacing: '-.02em' }}>
+            NOVA <span style={{ color: '#6366f1' }}>AI</span>
+          </div>
+          <div style={{ fontSize: 9, color: '#9ca3af', letterSpacing: '.1em', textTransform: 'uppercase', marginTop: -1 }}>Your Universal AI Employee</div>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg glass-panel">
-          <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-          <span className="text-xs text-slate-300 font-medium">One Master Agent. Every Task.</span>
+      {/* Center: status */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 20, padding: '4px 12px' }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#065f46' }}>One Master Agent, Every Task.</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          <span className="text-xs text-green-400 font-semibold">Online</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#ede9fe', border: '1px solid #c4b5fd', borderRadius: 20, padding: '4px 12px' }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1' }} />
+          <span style={{ fontSize: 11, fontWeight: 600, color: '#4338ca' }}>Online</span>
         </div>
       </div>
-    </header>
+
+      {/* Right: actions */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button style={{ width: 34, height: 34, borderRadius: 8, background: '#f9fafb', border: '1px solid #e8e4dd', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <Search size={15} color="#6b7280" />
+        </button>
+        <button style={{ width: 34, height: 34, borderRadius: 8, background: '#f9fafb', border: '1px solid #e8e4dd', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <Bell size={15} color="#6b7280" />
+        </button>
+      </div>
+    </div>
   );
 }

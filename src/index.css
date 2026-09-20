@@ -1,4 +1,10 @@
-@import "tailwindcss";
+/* css-lsp-disable-next-line unknownAtRules */
+/* css-lsp-disable-next-line unknownAtRules */
+@tailwind base; /* stylelint-disable-line at-rule-no-unknown */
+@tailwind components; /* stylelint-disable-line at-rule-no-unknown */
+/* Tailwind's @tailwind directive is processed by PostCSS. */
+/* css-lsp-disable-next-line unknownAtRules */
+@tailwind utilities; /* css-lsp-disable-line unknownAtRules */ /* stylelint-disable-line at-rule-no-unknown */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
