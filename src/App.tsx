@@ -1,13 +1,14 @@
+'use client';
 import { useState, useCallback } from 'react';
 import { useNova } from './nova/useNova';
-import { Header } from './nova/ui/Header';
 import { AgentList } from './nova/ui/AgentList';
 import { ChatPanel } from './nova/ui/ChatPanel';
 import { ExecutionPanel } from './nova/ui/ExecutionPanel';
 import { ResultPanel } from './nova/ui/ResultPanel';
 import { Landing } from './Landing';
+import { Sparkles, Bell, Search } from 'lucide-react';
 
-// Simple auth check without complex hooks
+// Simple auth
 const getStoredUser = () => {
   try {
     const u = localStorage.getItem('nova_current_user');
@@ -60,7 +61,7 @@ function SignupForm({ onLogin }: { onLogin: (u: any) => void }) {
         {[
           { id: 'free', name: 'Free', price: '$0', features: ['5 tasks/day', '3 agents', 'Basic output'], color: '#6b7280' },
           { id: 'pro', name: 'Pro', price: '$49/mo', features: ['Unlimited tasks', 'All 17 agents', 'Export MD/PDF', 'Priority'], color: P, popular: true },
-          { id: 'business', name: 'Business', price: '$99/mo', features: ['Everything in Pro', 'API access', '5 seats', 'Custom agents'], color: T },
+          { id: 'business', name: 'Business', price: '$99/mo', features: ['Everything in Pro', 'API access', '5 seats'], color: T },
         ].map(plan => (
           <div key={plan.id} style={{ background: (plan as any).popular ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${(plan as any).popular ? P : 'rgba(255,255,255,0.1)'}`, borderRadius: 14, padding: 24 }}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>{plan.name}</div>
@@ -81,7 +82,7 @@ function SignupForm({ onLogin }: { onLogin: (u: any) => void }) {
     <div style={{ minHeight: '100vh', background: '#030712', color: '#fff', fontFamily: 'Inter,sans-serif', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ width: 44, height: 44, background: `linear-gradient(135deg,${P},${T})`, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, margin: '0 auto 12px', boxShadow: `0 0 24px ${P}50` }}>✦</div>
+          <div style={{ width: 44, height: 44, background: `linear-gradient(135deg,${P},${T})`, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, margin: '0 auto 12px' }}>✦</div>
           <div style={{ fontSize: 22, fontWeight: 800 }}>Nova <span style={{ color: P }}>AI</span></div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>{view === 'login' ? 'Welcome back' : '5 free tasks daily'}</div>
         </div>
@@ -90,27 +91,23 @@ function SignupForm({ onLogin }: { onLogin: (u: any) => void }) {
           {view === 'signup' && <input required style={inp} placeholder="Full Name" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />}
           <input required type="email" style={inp} placeholder="Email" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} />
           <input required type="password" style={inp} placeholder="Password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} />
-          <button type="submit" disabled={loading}
-            style={{ background: `linear-gradient(135deg,${P},${T})`, border: 'none', borderRadius: 10, padding: 13, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter,sans-serif', marginTop: 4 }}>
+          <button type="submit" disabled={loading} style={{ background: `linear-gradient(135deg,${P},${T})`, border: 'none', borderRadius: 10, padding: 13, color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', fontFamily: 'Inter,sans-serif', marginTop: 4 }}>
             {loading ? 'Please wait...' : view === 'login' ? '→ Sign In' : '→ Create Free Account'}
           </button>
         </form>
         <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>
           {view === 'login'
             ? <><span style={{ cursor: 'pointer', color: P }} onClick={() => setView('signup')}>Create account</span> · <span style={{ cursor: 'pointer', color: P }} onClick={() => setView('pricing')}>View pricing</span></>
-            : <><span style={{ cursor: 'pointer', color: P }} onClick={() => setView('login')}>Sign in</span> · <span style={{ cursor: 'pointer', color: P }} onClick={() => setView('pricing')}>View pricing</span></>
-          }
+            : <><span style={{ cursor: 'pointer', color: P }} onClick={() => setView('login')}>Sign in</span> · <span style={{ cursor: 'pointer', color: P }} onClick={() => setView('pricing')}>View pricing</span></>}
         </div>
       </div>
     </div>
   );
 }
 
-function App() {
+function NovaApp({ user, onLogout }: { user: any; onLogout: () => void }) {
   const { state, submitTask, stop, retry, allAgents } = useNova();
   const [showResult, setShowResult] = useState(false);
-  const [showApp, setShowApp] = useState(false);
-  const [user, setUser] = useState<any>(getStoredUser);
 
   const handleSubmit = useCallback(async (request: string) => {
     if (user?.plan === 'free' && (user?.tasksToday || 0) >= 5) {
@@ -120,11 +117,8 @@ function App() {
     setShowResult(false);
     await submitTask(request);
     setShowResult(true);
-    if (user) {
-      const updated = { ...user, tasksToday: (user.tasksToday || 0) + 1 };
-      setUser(updated);
-      localStorage.setItem('nova_current_user', JSON.stringify(updated));
-    }
+    const updated = { ...user, tasksToday: (user.tasksToday || 0) + 1 };
+    localStorage.setItem('nova_current_user', JSON.stringify(updated));
   }, [submitTask, user]);
 
   const handleRetry = useCallback(() => { setShowResult(false); retry(); }, [retry]);
@@ -138,49 +132,100 @@ function App() {
     URL.revokeObjectURL(url);
   }, [state.finalOutput]);
 
-  const handleLogout = () => { localStorage.removeItem('nova_current_user'); setUser(null); setShowApp(false); };
+  return (
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f5f4f0', fontFamily: 'Inter,sans-serif' }}>
+
+      {/* TOP HEADER */}
+      <div style={{ background: '#fff', borderBottom: '1px solid #e8e4dd', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Sparkles size={16} color="#fff" />
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#1a1a2e' }}>NOVA <span style={{ color: '#6366f1' }}>AI</span></div>
+            <div style={{ fontSize: 9, color: '#9ca3af', letterSpacing: '.1em', textTransform: 'uppercase' }}>Your Universal AI Employee</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 600, color: '#065f46', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }} />One Master Agent, Every Task.
+          </div>
+          <div style={{ background: '#ede9fe', border: '1px solid #c4b5fd', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 600, color: '#4338ca', display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#6366f1' }} />Online
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {user?.plan === 'free' && <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 600 }}>{5 - (user.tasksToday || 0)} tasks left</span>}
+          <button style={{ width: 32, height: 32, borderRadius: 8, background: '#f9fafb', border: '1px solid #e8e4dd', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <Search size={14} color="#6b7280" />
+          </button>
+          <button style={{ width: 32, height: 32, borderRadius: 8, background: '#f9fafb', border: '1px solid #e8e4dd', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <Bell size={14} color="#6b7280" />
+          </button>
+          <div onClick={onLogout} title="Click to sign out" style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer' }}>
+            {user?.name?.[0]?.toUpperCase() || 'U'}
+          </div>
+        </div>
+      </div>
+
+      {/* 3-COLUMN LAYOUT */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '260px 1fr 300px', overflow: 'hidden' }}>
+
+        {/* LEFT: Agent List */}
+        <div style={{ background: '#fff', borderRight: '1px solid #e8e4dd', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <AgentList
+            agents={allAgents}
+            agentStates={state.agentStates}
+            masterOnline={true}
+            isRunning={state.isRunning}
+          />
+        </div>
+
+        {/* CENTER: Chat */}
+        <div style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#f5f4f0' }}>
+          {showResult && state.finalOutput ? (
+            <ResultPanel output={state.finalOutput} onRetry={handleRetry} onCopy={handleCopy} onExport={handleExport} />
+          ) : (
+            <ChatPanel state={state} onSubmit={handleSubmit} onStop={stop} onRetry={handleRetry} onCopy={handleCopy} onExport={handleExport} />
+          )}
+        </div>
+
+        {/* RIGHT: Execution Panel */}
+        <div style={{ background: '#fff', borderLeft: '1px solid #e8e4dd', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <ExecutionPanel state={state} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [user, setUser] = useState<any>(getStoredUser);
+  const [showApp, setShowApp] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem('nova_current_user');
+    setUser(null);
+    setShowApp(false);
+  };
 
   if (!user) return <SignupForm onLogin={setUser} />;
 
   if (!showApp) return (
     <div style={{ position: 'relative' }}>
       <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 300, display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{user.name?.split(' ')[0]}</span>
-        <button onClick={handleLogout} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 7, padding: '5px 10px', color: 'rgba(255,255,255,0.6)', fontSize: 12, cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}>Sign out</button>
+        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', background: 'rgba(0,0,0,0.3)', padding: '4px 10px', borderRadius: 20 }}>
+          {user.name?.split(' ')[0]}
+        </span>
+        <button onClick={handleLogout} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 7, padding: '5px 10px', color: 'rgba(255,255,255,0.7)', fontSize: 12, cursor: 'pointer', fontFamily: 'Inter,sans-serif' }}>
+          Sign out
+        </button>
       </div>
       <Landing onGetStarted={() => setShowApp(true)} />
     </div>
   );
 
-  return (
-    <div className="h-screen flex flex-col bg-mesh text-slate-100 overflow-hidden">
-      <div style={{ position: 'relative' }}>
-        <Header />
-        <button onClick={() => setShowApp(false)} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 7, padding: '5px 10px', color: 'rgba(255,255,255,0.6)', fontSize: 12, cursor: 'pointer' }}>← Home</button>
-        <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {user.plan === 'free' && <span style={{ fontSize: 11, color: '#F59E0B' }}>{5 - (user.tasksToday || 0)} tasks left</span>}
-          <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#00E5C3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, cursor: 'pointer' }} onClick={handleLogout} title="Click to sign out">
-            {user.name?.[0]?.toUpperCase() || 'U'}
-          </div>
-        </div>
-      </div>
-      <div className="flex-1 flex overflow-hidden">
-        <aside className="w-64 lg:w-72 shrink-0 border-r border-indigo-500/10 glass-panel-strong hidden md:flex flex-col">
-          <AgentList agents={allAgents} agentStates={state.agentStates} masterOnline={true} isRunning={state.isRunning} />
-        </aside>
-        <main className="flex-1 flex flex-col min-w-0 border-r border-indigo-500/10">
-          {showResult && state.finalOutput ? (
-            <ResultPanel output={state.finalOutput} onRetry={handleRetry} onCopy={handleCopy} onExport={handleExport} />
-          ) : (
-            <ChatPanel state={state} onSubmit={handleSubmit} onStop={stop} onRetry={handleRetry} onCopy={handleCopy} onExport={handleExport} />
-          )}
-        </main>
-        <aside className="w-72 lg:w-80 shrink-0 glass-panel-strong hidden lg:flex flex-col">
-          <ExecutionPanel state={state} />
-        </aside>
-      </div>
-    </div>
-  );
+  return <NovaApp user={user} onLogout={handleLogout} />;
 }
 
 export default App;
